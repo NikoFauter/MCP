@@ -1,0 +1,111 @@
+EESchema Schematic File Version 4
+EELAYER 30 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L HWP:PiHat J1
+U 1 1 5E49C9E0
+P 5650 3500
+F 0 "J1" H 6250 4700 60  0000 C CNN
+F 1 "PiHat" H 6250 4600 60  0000 C CNN
+F 2 "HWP:PiHeader" H 5650 3500 60  0001 C CNN
+F 3 "" H 5650 3500 60  0000 C CNN
+	1    5650 3500
+	1    0    0    -1  
+$EndComp
+$Comp
+L HWP:+3V3 #PWR?
+U 1 1 6081A7AA
+P 5450 2050
+F 0 "#PWR?" H 5450 1900 50  0001 C CNN
+F 1 "+3V3" H 5465 2223 50  0000 C CNN
+F 2 "" H 5450 2050 50  0001 C CNN
+F 3 "" H 5450 2050 50  0001 C CNN
+	1    5450 2050
+	1    0    0    -1  
+$EndComp
+$Comp
+L HWP:+5V #PWR?
+U 1 1 6081AD0B
+P 5750 2050
+F 0 "#PWR?" H 5750 1900 50  0001 C CNN
+F 1 "+5V" H 5765 2223 50  0000 C CNN
+F 2 "" H 5750 2050 50  0001 C CNN
+F 3 "" H 5750 2050 50  0001 C CNN
+	1    5750 2050
+	1    0    0    -1  
+$EndComp
+$Comp
+L HWP:GND #PWR?
+U 1 1 6081B3E5
+P 5650 4950
+F 0 "#PWR?" H 5650 4700 50  0001 C CNN
+F 1 "GND" H 5655 4777 50  0000 C CNN
+F 2 "" H 5650 4950 50  0001 C CNN
+F 3 "" H 5650 4950 50  0001 C CNN
+	1    5650 4950
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5350 4750 5350 4850
+Wire Wire Line
+	5350 4850 5450 4850
+Wire Wire Line
+	5650 4850 5650 4950
+Wire Wire Line
+	5650 4850 5750 4850
+Wire Wire Line
+	5950 4850 5950 4750
+Connection ~ 5650 4850
+Wire Wire Line
+	5850 4750 5850 4850
+Connection ~ 5850 4850
+Wire Wire Line
+	5850 4850 5950 4850
+Wire Wire Line
+	5750 4750 5750 4850
+Connection ~ 5750 4850
+Wire Wire Line
+	5750 4850 5850 4850
+Wire Wire Line
+	5650 4750 5650 4850
+Wire Wire Line
+	5550 4750 5550 4850
+Connection ~ 5550 4850
+Wire Wire Line
+	5550 4850 5650 4850
+Wire Wire Line
+	5450 4750 5450 4850
+Connection ~ 5450 4850
+Wire Wire Line
+	5450 4850 5550 4850
+Wire Wire Line
+	5450 2050 5450 2150
+Wire Wire Line
+	5450 2150 5550 2150
+Wire Wire Line
+	5550 2150 5550 2250
+Connection ~ 5450 2150
+Wire Wire Line
+	5450 2150 5450 2250
+Wire Wire Line
+	5750 2050 5750 2150
+Wire Wire Line
+	5750 2150 5850 2150
+Wire Wire Line
+	5850 2150 5850 2250
+Connection ~ 5750 2150
+Wire Wire Line
+	5750 2150 5750 2250
+$EndSCHEMATC

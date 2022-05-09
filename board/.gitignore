@@ -1,0 +1,7 @@
+*bak
+*.net
+*.dcm
+fp-info-cache
+*-cache.lib
+*-rescue.lib
+meta

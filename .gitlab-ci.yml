@@ -1,0 +1,34 @@
+stages:
+  - test
+
+default:
+  tags:
+    - kubernetes
+
+.kicad:
+  image: setsoft/kicad_auto:10.4-5.1.6
+
+ERC:
+  stage: test
+  extends: .kicad
+  script: eeschema_do run_erc --warnings_as_errors board/RPi_Hat.sch .
+
+DRC:
+  stage: test
+  extends: .kicad
+  script: pcbnew_do run_drc board/RPi_Hat.kicad_pcb .
+
+pytest:
+  image: python:3.8.1-alpine
+  stage: test
+  before_script:
+    - apk add gcc python3-dev jpeg-dev zlib-dev linux-headers build-base # pillow dependencies
+    - cd code
+    - pip install -r envsense/requirements.txt
+  script:
+    - pytest --junitxml=report.xml
+  artifacts:
+    when: always
+    reports:
+      junit: code/report.xml
+

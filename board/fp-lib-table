@@ -1,0 +1,3 @@
+(fp_lib_table
+  (lib (name HWP)(type KiCad)(uri ${KIPRJMOD}/HWP.pretty)(options "")(descr ""))
+)
