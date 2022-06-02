@@ -1,6 +1,9 @@
+from curses.ascii import ctrl
 import math
+from multiprocessing.sharedctypes import Value
 
 import os
+from this import d
 
 if os.name == 'nt':
     from envsense.test.mock_i2c import MockI2C as I2C
@@ -34,29 +37,136 @@ class BME280(I2C):
 
     def set_oversampling_mode(self, temp_oversample, hum_oversample,
                               press_oversample):
+        invalid = temp_oversample < 0 | hum_oversample < 0
+        invalid = invalid | press_oversample < 0
+        invalid = invalid | temp_oversample > 16
+        invalid = invalid | hum_oversample > 16 | press_oversample > 16
+        if invalid:
+            raise ValueError
+        t_reg = 0
+        if temp_oversample != 0:
+            t_reg = math.log2(temp_oversample)+1
+        if(round(t_reg) != t_reg):
+            raise ValueError
+        h_reg = 0
+        if hum_oversample != 0:
+            h_reg = math.log2(hum_oversample)+1
+        if(round(h_reg) != h_reg):
+            raise ValueError
+        p_reg = 0
+        if press_oversample != 0:
+            p_reg = math.log2(press_oversample)+1
+        if(round(t_reg) != t_reg):
+            raise ValueError
+
+        ctrl_meas = self.get_registers(hal.REG_BME280_CTRL_MEAS)
+        maskTempPress = hal.MASK_BME280_CTRL_MEAS_OSRS_T
+        maskTempPress = maskTempPress | hal.MASK_BME280_CTRL_MEAS_OSRS_P
+        t_reg_offset = int(t_reg) << hal.OFFSET_BME280_CTRL_MEAS_OSRS_T
+        p_reg_offset = int(p_reg) << hal.OFFSET_BME280_CTRL_MEAS_OSRS_P
+        valTempPress = t_reg_offset | p_reg_offset
+        ctrl_meas = bit.set_mask(ctrl_meas, maskTempPress, valTempPress)
+        self.set_register(hal.REG_BME280_CTRL_MEAS, ctrl_meas)
+        ctrl_hum = self.get_registers(hal.REG_BME280_CTRL_HUM, 1)
+        ctrl_hum = bit.set_mask(ctrl_hum, 7, int(h_reg))
+        self.set_register(hal.REG_BME280_CTRL_HUM, ctrl_hum)
+
         pass
 
     def set_normal_operation_mode(self):
+        mask = hal.MASK_BME280_CTRL_MEAS_MODE
+        binary = self.get_registers(hal.REG_BME280_CTRL_MEAS)
+        Value = bit.set_mask(binary, mask, 0b11)
+        self.set_register(hal.REG_BME280_CTRL_MEAS, Value)
         pass
 
     def _get_temperature_compensation(self):
-        pass
+        dig_T1 = self.get_registers(hal.REG_BME280_DIG_T1, 2)
+        dig_T1 = dig_T1[1] << 8 | dig_T1[0]
+        dig_T1 = datatypes.get_int_from_ushort(dig_T1)
+        dig_T2 = self.get_registers(hal.REG_BME280_DIG_T2, 2)
+        dig_T2 = dig_T2[1] << 8 | dig_T2[0]
+        dig_T2 = datatypes.get_int_from_short(dig_T2)
+        dig_T3 = self.get_registers(hal.REG_BME280_DIG_T3, 2)
+        dig_T3 = dig_T3[1] << 8 | dig_T3[0]
+        dig_T3 = datatypes.get_int_from_short(dig_T3)
+        return (dig_T1, dig_T2, dig_T3)
 
     def _get_pressure_compensation(self):
+        dig_P = self.get_registers(hal.REG_BME280_DIG_P1, 18)
+        dig_P1 = dig_P[1] << 8 | dig_P[0]
+        dig_P1 = datatypes.get_int_from_ushort(dig_P1)
+        result = [dig_P1]
+        for dig_Pi in range(1, 9):
+            temp = dig_P[dig_Pi*2+1] << 8 | dig_P[dig_Pi*2]
+            temp = datatypes.get_int_from_short(temp)
+            result.append(temp)
+        return result
         pass
 
     def _get_humidity_compensation(self):
-        pass
+        dig_H1 = self.get_registers(hal.REG_BME280_DIG_H1, 1)
+        dig_H1 = datatypes.get_int_from_ubyte(dig_H1)
+        result = [dig_H1]
 
-    pass
+        dig_HE = self.get_registers(hal.REG_BME280_DIG_H2, 7)
+
+        dig_H2 = dig_HE[1] << 8 | dig_HE[0]
+        dig_H2 = datatypes.get_int_from_short(dig_H2)
+        result.append(dig_H2)
+
+        dig_H3 = dig_HE[2]
+        dig_H3 = datatypes.get_int_from_ubyte(dig_H3)
+        result.append(dig_H3)
+
+        dig_H4 = dig_HE[3] << 4 | (dig_HE[4] & 15)
+        dig_H4 = datatypes.get_int_from_short(dig_H4)
+        result.append(dig_H4)
+
+        dig_H5 = dig_HE[5] << 4 | ((dig_HE[4] & ~15) >> 4)
+        print("HE[5]=", bin(dig_HE[5] << 4))
+        print("HE[4][7:4]=", bin((dig_HE[4] & ~15) >> 4))
+
+        print("H5=", bin(dig_H5))
+        dig_H5 = datatypes.get_int_from_short(dig_H5)
+        result.append(dig_H5)
+
+        print("H5=", bin(2304))
+        dig_H6 = datatypes.get_int_from_byte(dig_HE[6])
+        result.append(dig_H6)
+
+        return result
 
     def compensate_temperature(self, dig_t1, dig_t2, dig_t3, adc_t):
+
+        var1 = ((adc_t)/16384.0 - (dig_t1)/1024.0) * (dig_t2)
+        var2 = ((adc_t)/131072.0 - (dig_t1)/8192.0)
+        var2 *= ((adc_t)/131072.0 - (dig_t1)/8192.0) * (dig_t3)
+        T = (var1 + var2)/5120.0
+        t_fine = (var1 + var2)
+        return T
         pass
 
     pass
 
     def compensate_pressure(self, dig_p1, dig_p2, dig_p3, dig_p4, dig_p5,
                             dig_p6, dig_p7, dig_p8, dig_p9, adc_p):
+
+        var1 = self.t_fine - 128000
+        var2 = var1 * var1 * dig_p6
+        var2 = var2 + (var1*dig_p5) << 17
+        var2 = var2 + dig_p4 << 35
+        var1 = ((var1 * var1 * dig_p3) >> 8) + ((var1 * dig_p2) << 12)
+        var1 = ((((1) << 47)+var1))*(dig_p1) >> 33
+        if (var1 == 0):
+            return 0  # avoid exception caused by division by zero
+        p = 1048576-adc_p
+        p = (((p << 31)-var2)*3125)/var1
+        var1 = ((dig_p9) * (p >> 13) * (p >> 13)) >> 25
+        var2 = ((dig_p8) * p) >> 19
+        p = ((p + var1 + var2) >> 8) + ((dig_p7) << 4)
+        return p
+
         pass
 
     pass
@@ -66,6 +176,13 @@ class BME280(I2C):
         pass
 
     def get_temperature(self):
+        Temp_array = self.get_registers(hal.REG_BME280_TEMP, 3)
+        Temp_MSB = Temp_array[0]
+        Temp_LSB = Temp_array[1]
+        Temp_xLSB = Temp_array[2] >> 4
+        T = int(Temp_MSB << 12 | Temp_LSB << 4 | Temp_xLSB)
+        (dig_t1, dig_t2, dig_t3) = self._get_temperature_compensation()
+        return self.compensate_temperature(dig_t1, dig_t2, dig_t3, T)
         pass
 
     def get_pressure(self):
