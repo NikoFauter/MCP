@@ -4,6 +4,7 @@ if os.name == 'nt':
 else:
     from envsense.lib.i2c import I2C
 from envsense.lib import hal
+from envsense.lib import bit
 
 
 class CCS811(I2C):
@@ -19,15 +20,29 @@ class CCS811(I2C):
         return self.get_registers(hal.REG_CCS811_HW_ID)
 
     def get_status(self):
-        pass
+        return self.get_registers(hal.REG_CCS811_STATUS)
 
     def _app_start(self):
+        status = self.get_status()
+        if (status & 1 << 4 != 0):
+            print("Valid firmware already loaded")
+            pass
+        val = 0
+        self.set_register(hal.REG_CCS811_APP_START, val)
         pass
 
     def get_error_id(self):
-        pass
+        return self.get_registers(hal.REG_CCS811_ERROR_ID)
 
     def _set_mode(self, mode):
+
+        if not(0 <= mode <= 4):
+            raise AssertionError
+        meas_mode = self.get_registers(hal.REG_CCS811_MEAS_MODE)
+        mask = 0b111 << 4
+        value = mode << 4
+        meas_mode = bit.set_mask(meas_mode, mask, value)
+        self.set_register(hal.REG_CCS811_MEAS_MODE, meas_mode)
         pass
 
     def read_values(self):

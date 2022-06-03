@@ -1,7 +1,9 @@
+import ctypes
 from curses.ascii import ctrl
 import math
+from multiprocessing import sharedctypes
 from multiprocessing.sharedctypes import Value
-
+from ctypes import c_int64
 import os
 from this import d
 
@@ -152,28 +154,41 @@ class BME280(I2C):
     def compensate_pressure(self, dig_p1, dig_p2, dig_p3, dig_p4, dig_p5,
                             dig_p6, dig_p7, dig_p8, dig_p9, adc_p):
 
-        var1 = self.t_fine - 128000
-        var2 = var1 * var1 * dig_p6
-        var2 = var2 + (var1*dig_p5) << 17
-        var2 = var2 + dig_p4 << 35
-        var1 = ((var1 * var1 * dig_p3) >> 8) + ((var1 * dig_p2) << 12)
-        var1 = ((((1) << 47)+var1))*(dig_p1) >> 33
-        if (var1 == 0):
+        var1 = self.t_fine/2.0 - 64000.0
+        var2 = var1 * var1 * dig_p6 / 32768.0
+        var2 = var2 + var1 * dig_p5 * 2.0
+        var2 = (var2/4.0)+((dig_p4) * 65536.0)
+        var1 = ((dig_p3) * var1 * var1 / 524288.0 + (dig_p2) * var1) / 524288.0
+        var1 = (1.0 + var1 / 32768.0)*(dig_p1)
+        if (var1 == 0.0):
             return 0  # avoid exception caused by division by zero
-        p = 1048576-adc_p
-        p = (((p << 31)-var2)*3125)/var1
-        var1 = ((dig_p9) * (p >> 13) * (p >> 13)) >> 25
-        var2 = ((dig_p8) * p) >> 19
-        p = ((p + var1 + var2) >> 8) + ((dig_p7) << 4)
+        p = 1048576.0 - adc_p
+        p = (p - (var2 / 4096.0)) * 6250.0 / var1
+        var1 = (dig_p9) * p * p / 2147483648.0
+        var2 = p * (dig_p8) / 32768.0
+        p = p + (var1 + var2 + (dig_p7)) / 16.0
         return p
-
         pass
 
     pass
 
     def compensate_humidity(self, dig_h1, dig_h2, dig_h3, dig_h4, dig_h5,
                             dig_h6, adc_h):
-        pass
+
+        var_h1 = (self.t_fine) - 76800.0
+        var_h2 = (adc_h - ((dig_h4) * 64.0 + (dig_h5) / 16384.0 * var_h1))
+        var_h5 = (1.0 + (dig_h3) / (67108864.0 * var_h1))
+        var_h3 = (1.0 + (dig_h6) / 67108864.0 * var_h1 * var_h5)
+        var_h4 = ((dig_h2) / 65536.0 * var_h3)
+        var_h = var_h2 * var_h4
+
+        var_h = var_h * (1.0 - (dig_h1) * var_h / 524288.0)
+        if (var_h > 100.0):
+            var_h = 100.0
+        else:
+            if (var_h < 0.0):
+                var_h = 0.0
+        return var_h
 
     def get_temperature(self):
         Temp_array = self.get_registers(hal.REG_BME280_TEMP, 3)
@@ -186,7 +201,20 @@ class BME280(I2C):
         pass
 
     def get_pressure(self):
+        Press_array = self.get_registers(hal.REG_BME280_PRESS, 3)
+        Press_MSB = Press_array[0]
+        Press_LSB = Press_array[1]
+        Press_xLSB = Press_array[2] >> 4
+        P = int(Press_MSB << 12 | Press_LSB << 4 | Press_xLSB)
+        (dig_p1, dig_p2, dig_p3, dig_p4, dig_p5, dig_p6, dig_p7, dig_p8, dig_p9) = self._get_pressure_compensation()
+        return self.compensate_pressure(dig_p1, dig_p2, dig_p3, dig_p4, dig_p5, dig_p6, dig_p7, dig_p8, dig_p9,  P)
         pass
 
     def get_humidity(self):
+        Hum_array = self.get_registers(hal.REG_BME280_HUM, 2)
+        Hum_MSB = Hum_array[0]
+        Hum_LSB = Hum_array[1]
+        H = int(Hum_MSB << 8 | Hum_LSB)
+        (dig_h1, dig_h2, dig_h3, dig_h4, dig_h5, dig_h6) = self._get_humidity_compensation()
+        return self.compensate_humidity(dig_h1, dig_h2, dig_h3, dig_h4, dig_h5, dig_h6, H)
         pass
