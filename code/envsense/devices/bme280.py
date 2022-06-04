@@ -1,4 +1,3 @@
-import ctypes
 from curses.ascii import ctrl
 import math
 from multiprocessing import sharedctypes
@@ -126,14 +125,10 @@ class BME280(I2C):
         result.append(dig_H4)
 
         dig_H5 = dig_HE[5] << 4 | ((dig_HE[4] & ~15) >> 4)
-        print("HE[5]=", bin(dig_HE[5] << 4))
-        print("HE[4][7:4]=", bin((dig_HE[4] & ~15) >> 4))
 
-        print("H5=", bin(dig_H5))
         dig_H5 = datatypes.get_int_from_short(dig_H5)
         result.append(dig_H5)
 
-        print("H5=", bin(2304))
         dig_H6 = datatypes.get_int_from_byte(dig_HE[6])
         result.append(dig_H6)
 
@@ -206,7 +201,8 @@ class BME280(I2C):
         Press_LSB = Press_array[1]
         Press_xLSB = Press_array[2] >> 4
         P = int(Press_MSB << 12 | Press_LSB << 4 | Press_xLSB)
-        (dig_p1, dig_p2, dig_p3, dig_p4, dig_p5, dig_p6, dig_p7, dig_p8, dig_p9) = self._get_pressure_compensation()
+        digs = self._get_pressure_compensation()
+        (dig_p1, dig_p2, dig_p3, dig_p4, dig_p5, dig_p6, dig_p7, dig_p8, dig_p9) = digs
         return self.compensate_pressure(dig_p1, dig_p2, dig_p3, dig_p4, dig_p5, dig_p6, dig_p7, dig_p8, dig_p9,  P)
         pass
 
@@ -215,6 +211,8 @@ class BME280(I2C):
         Hum_MSB = Hum_array[0]
         Hum_LSB = Hum_array[1]
         H = int(Hum_MSB << 8 | Hum_LSB)
-        (dig_h1, dig_h2, dig_h3, dig_h4, dig_h5, dig_h6) = self._get_humidity_compensation()
+        digs = self._get_humidity_compensation()
+        (dig_h1, dig_h2, dig_h3, dig_h4, dig_h5, dig_h6) = digs
+
         return self.compensate_humidity(dig_h1, dig_h2, dig_h3, dig_h4, dig_h5, dig_h6, H)
         pass
