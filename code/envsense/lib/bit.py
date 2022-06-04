@@ -56,9 +56,8 @@ def set_mask(binary, mask, value):
                 binary = set_bit(binary, i1)
 
         else:
-            if (mask & 1 << k1):
+            if (mask & 1 << i1):
                 raise ValueError
-        k1 += 1
         i1 += 1
     return binary
     pass

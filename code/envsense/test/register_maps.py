@@ -2,6 +2,7 @@ from envsense.lib import hal
 
 bme280 = {
     hal.REG_BME280_CTRL_MEAS: 0b00001000,
+    hal.REG_BME280_CTRL_HUM: 0b000,
     hal.REG_BME280_DIG_T1: 0b00011000,
     hal.REG_BME280_DIG_T1 + 1: 0b10000000,
     hal.REG_BME280_DIG_T2: 0b00000000,
