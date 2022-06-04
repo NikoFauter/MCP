@@ -46,7 +46,10 @@ class CCS811(I2C):
         pass
 
     def read_values(self):
-        pass
+        bytes = self.get_registers(hal.REG_CCS811_ALG_RESULT_DATA, 4)
+        eco2 = bytes[0] << 8 | bytes[1]
+        tvoc = bytes[2] << 8 | bytes[3]
+        return (eco2, tvoc)
 
     def get_eco2(self):
         pass
