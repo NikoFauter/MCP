@@ -55,6 +55,11 @@ def test_read_values(mock_base_class):
     assert ccs811.read_values() == (467, 11)
 
 
+def test_get_tvoc(mock_base_class):
+    ccs811 = CCS811(1, hal.ADDR_CCS811)
+    assert ccs811.get_tvoc() == 11
+
+
 def test_raw_data(mock_base_class):
     ccs811 = CCS811(1, hal.ADDR_CCS811)
     assert ccs811.raw_data() == (7, 409)
