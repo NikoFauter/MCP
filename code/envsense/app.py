@@ -1,3 +1,4 @@
+from pickle import TRUE
 from time import sleep
 from envsense.lib import hal
 from envsense.devices.bme280 import BME280
@@ -31,6 +32,11 @@ def run():
     draw.bitmap((0, 0), logo, fill=1)
     # Display canvas
     oled.display()
+    oled.image.show()
+    sleep(3)
+    oled.cls()
+    while TRUE:
+        draw.rectangle((0, 0, oled.width - 1, oled.height - 1), outline=1, fill=0)
 
     pass
 
