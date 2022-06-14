@@ -1,4 +1,4 @@
-from envsense import app
+from envsense import app, app_test
 
 if __name__ == '__main__':
-    app.run()
+    app_test.run()

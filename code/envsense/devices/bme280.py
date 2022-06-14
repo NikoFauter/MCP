@@ -142,9 +142,6 @@ class BME280(I2C):
         T = (var1 + var2)/5120.0
         t_fine = (var1 + var2)
         return T
-        pass
-
-    pass
 
     def compensate_pressure(self, dig_p1, dig_p2, dig_p3, dig_p4, dig_p5,
                             dig_p6, dig_p7, dig_p8, dig_p9, adc_p):
@@ -163,9 +160,6 @@ class BME280(I2C):
         var2 = p * (dig_p8) / 32768.0
         p = p + (var1 + var2 + (dig_p7)) / 16.0
         return p
-        pass
-
-    pass
 
     def compensate_humidity(self, dig_h1, dig_h2, dig_h3, dig_h4, dig_h5,
                             dig_h6, adc_h):
@@ -193,7 +187,6 @@ class BME280(I2C):
         T = int(Temp_MSB << 12 | Temp_LSB << 4 | Temp_xLSB)
         (dig_t1, dig_t2, dig_t3) = self._get_temperature_compensation()
         return self.compensate_temperature(dig_t1, dig_t2, dig_t3, T)
-        pass
 
     def get_pressure(self):
         Press_array = self.get_registers(hal.REG_BME280_PRESS, 3)
@@ -204,7 +197,6 @@ class BME280(I2C):
         digs = self._get_pressure_compensation()
         (dig_p1, dig_p2, dig_p3, dig_p4, dig_p5, dig_p6, dig_p7, dig_p8, dig_p9) = digs
         return self.compensate_pressure(dig_p1, dig_p2, dig_p3, dig_p4, dig_p5, dig_p6, dig_p7, dig_p8, dig_p9,  P)
-        pass
 
     def get_humidity(self):
         Hum_array = self.get_registers(hal.REG_BME280_HUM, 2)
@@ -215,4 +207,3 @@ class BME280(I2C):
         (dig_h1, dig_h2, dig_h3, dig_h4, dig_h5, dig_h6) = digs
 
         return self.compensate_humidity(dig_h1, dig_h2, dig_h3, dig_h4, dig_h5, dig_h6, H)
-        pass
