@@ -33,13 +33,13 @@ def get_bit(binary, offset):
         return 0
     else:
         return 1
-    pass
+    
 
 
 # Return all bits of 'binary' specified by 'mask' (marked with 1s)
 def get_mask(binary, mask):
     return binary & mask
-    pass
+    
 
 
 # Set all bits of 'binary' specified by 'mask' to the corresponding
