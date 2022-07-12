@@ -7,7 +7,6 @@ from PIL import ImageFont, ImageDraw, Image
 from envsense.lib import gpio
 
 
-
 def display(oled, bme280, ccs811, page):
     def measurement(value):
         # Take Measurements

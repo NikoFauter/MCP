@@ -48,7 +48,8 @@ class GPIOS():
         Button6 = GPIOIn(11)
         Button7 = GPIOIn(5)
 
-        self.buttons = [Button0, Button1, Button2, Button3, Button4, Button5, Button6, Button7]
+        self.buttons = [Button0, Button1, Button2, Button3,
+                        Button4, Button5, Button6, Button7]
 
         LED0 = GPIOOut(6)
         LED1 = GPIOOut(13)
