@@ -4,7 +4,7 @@ from envsense.devices.bme280 import BME280
 from envsense.devices.ccs811 import CCS811
 from envsense.devices.ssd1306 import ssd1306
 from PIL import ImageFont, ImageDraw, Image
-from envsense.lib import gpio
+from envsense.lib.gpio import GPIOS
 
 
 def display(oled, bme280, ccs811, page):
@@ -23,7 +23,7 @@ def display(oled, bme280, ccs811, page):
             5: ("Total VOC:", ccs811.get_tvoc() + " ppb")
         }
         return meas.get(value, ("Invalid", "Measurement"))
-    oled.cls
+    oled.cls()
     m = measurement(page)
     draw = oled.canvas
     # Small border around the display
@@ -39,6 +39,7 @@ def display(oled, bme280, ccs811, page):
         m[1],
         font=font2,
         fill=1)
+    oled.display()
 
 
 def waiting_idly(gpios, time):
@@ -46,9 +47,9 @@ def waiting_idly(gpios, time):
         for k in range(1, 8):
             gpios.buttons[k].when_pressed = gpios.LEDS[k].on
             if gpios.buttons[k].is_pressed:
-                return [i*0.1, k]
+                return k
             sleep(0.1)
-    return [time, 0]
+    return 0
 
 
 def run():
@@ -99,7 +100,7 @@ def run():
             for i in range(0, 8):
                 if gpios.buttons[i].is_pressed:
                     if time_since_pressed[i] != 0:
-                        GPIOS.toggle_LED_index(i)
+                        gpios.toggle_LED_index(i)
                         time_since_pressed[i] = 0
                 else:
                     time_since_pressed[i]+0.1
